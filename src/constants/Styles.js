@@ -4,13 +4,20 @@ import Colors from './Colors';
 export const GlobalStyles = StyleSheet.create({
     container: {
         flex: 1,
-        padding: 16,
-        backgroundColor: '#fff',
+        padding: 0, // Reset padding because Gradient will handle layout
+        backgroundColor: Colors.dark.background,
+    },
+    contentContainer: {
+        flex: 1,
+        padding: 24,
     },
     title: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        marginBottom: 16,
+        fontSize: 40,
+        fontWeight: '100',
+        letterSpacing: -1,
+        marginBottom: 32,
+        color: Colors.dark.text,
+        marginTop: 60,
     },
 });
 

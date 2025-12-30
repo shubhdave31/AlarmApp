@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, FlatList, TouchableOpacity, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useAlarm } from '@/context/AlarmContext';
 import AlarmCard from '@/components/AlarmCard';
 import { GlobalStyles } from '@/constants/Styles';
@@ -11,15 +12,19 @@ export default function Home() {
     const router = useRouter();
 
     return (
-        <View style={GlobalStyles.container}>
+        <LinearGradient
+            colors={Colors.dark.gradient}
+            style={GlobalStyles.container}
+        >
             <FlatList
                 data={alarms}
                 keyExtractor={(item) => item.id}
+                contentContainerStyle={{ padding: 24, paddingBottom: 120 }}
                 renderItem={({ item }) => <AlarmCard alarm={item} />}
                 ListEmptyComponent={
                     <View style={styles.emptyState}>
-                        <Text style={styles.emptyText}>No alarms set.</Text>
-                        <Text style={styles.emptySubText}>Tap + to add one.</Text>
+                        <Text style={styles.emptyText}>No Alarms</Text>
+                        <Text style={styles.emptySubText}>Add one to get started</Text>
                     </View>
                 }
             />
@@ -30,7 +35,7 @@ export default function Home() {
             >
                 <Text style={styles.fabText}>+</Text>
             </TouchableOpacity>
-        </View>
+        </LinearGradient>
     );
 }
 
@@ -40,33 +45,35 @@ const styles = StyleSheet.create({
         marginTop: 100,
     },
     emptyText: {
-        fontSize: 20,
-        color: '#888',
+        fontSize: 24,
+        color: Colors.dark.textSecondary,
+        fontWeight: '600',
     },
     emptySubText: {
-        fontSize: 14,
-        color: '#aaa',
-        marginTop: 8,
+        fontSize: 16,
+        color: '#666',
+        marginTop: 12,
     },
     fab: {
         position: 'absolute',
-        bottom: 24,
-        right: 24,
-        width: 56,
-        height: 56,
-        borderRadius: 28,
-        backgroundColor: Colors.light.tint,
+        bottom: 32,
+        right: 32,
+        width: 64,
+        height: 64,
+        borderRadius: 32,
+        backgroundColor: Colors.dark.tint,
         justifyContent: 'center',
         alignItems: 'center',
         elevation: 8,
-        shadowColor: '#000',
+        shadowColor: Colors.dark.tint,
         shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
-        shadowRadius: 4,
+        shadowOpacity: 0.4,
+        shadowRadius: 8,
     },
     fabText: {
         fontSize: 32,
         color: '#fff',
-        lineHeight: 32,
+        lineHeight: 34,
+        fontWeight: 'bold',
     },
 });
