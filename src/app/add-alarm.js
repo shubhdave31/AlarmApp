@@ -10,10 +10,14 @@ import Colors from '@/constants/Colors';
 export default function AddAlarm() {
     const [date, setDate] = useState(new Date());
     const [label, setLabel] = useState('');
+    const [showPicker, setShowPicker] = useState(false);
     const { addAlarm } = useAlarm();
     const router = useRouter();
 
     const onChange = (event, selectedDate) => {
+        if (Platform.OS === 'android') {
+            setShowPicker(false);
+        }
         const currentDate = selectedDate || date;
         setDate(currentDate);
     };
@@ -45,15 +49,48 @@ export default function AddAlarm() {
                 <View style={styles.inputContainer}>
                     <Text style={styles.label}>TIME</Text>
                     <View style={styles.pickerContainer}>
-                        <DateTimePicker
-                            testID="dateTimePicker"
-                            value={date}
-                            mode="time"
-                            is24Hour={true}
-                            onChange={onChange}
-                            display="spinner"
-                            textColor="white"
-                        />
+                        {Platform.OS === 'android' && (
+                            <TouchableOpacity onPress={() => setShowPicker(true)}>
+                                <Text style={styles.timeText}>
+                                    {date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })}
+                                </Text>
+                            </TouchableOpacity>
+                        )}
+
+                        {Platform.OS === 'web' ? (
+                            React.createElement('input', {
+                                type: 'time',
+                                value: date.toTimeString().slice(0, 5),
+                                onChange: (e) => {
+                                    const [hours, minutes] = e.target.value.split(':');
+                                    const newDate = new Date(date);
+                                    newDate.setHours(hours);
+                                    newDate.setMinutes(minutes);
+                                    onChange(null, newDate);
+                                },
+                                style: {
+                                    width: '100%',
+                                    padding: '12px',
+                                    fontSize: '16px',
+                                    borderRadius: '8px',
+                                    border: '1px solid #ccc',
+                                    backgroundColor: 'white',
+                                    color: 'black',
+                                }
+                            })
+                        ) : (
+                            (showPicker || Platform.OS !== 'android') && (
+                                <DateTimePicker
+                                    testID="dateTimePicker"
+                                    value={date}
+                                    mode="time"
+                                    is24Hour={true}
+                                    onChange={onChange}
+                                    display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                                    textColor="white"
+                                />
+                            )
+                        )}
                     </View>
                 </View>
 
@@ -116,5 +153,10 @@ const styles = StyleSheet.create({
     cancelBtnText: {
         color: Colors.dark.textSecondary,
         fontSize: 16,
+    },
+    timeText: {
+        fontSize: 32,
+        color: Colors.dark.text,
+        fontWeight: 'bold',
     },
 });
