@@ -1,7 +1,7 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import { Alert, Vibration, Platform } from 'react-native';
-import { v4 as uuidv4 } from 'uuid';
 import 'react-native-get-random-values';
+import { v4 as uuidv4 } from 'uuid';
 
 const AlarmContext = createContext();
 
