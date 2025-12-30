@@ -1,16 +1,34 @@
 import { Stack } from 'expo-router';
 import { AlarmProvider } from '@/context/AlarmContext';
+import { useFonts, Inter_200ExtraLight, Inter_300Light, Inter_400Regular, Inter_500Medium, Inter_600SemiBold, Inter_700Bold } from '@expo-google-fonts/inter';
+import { useEffect } from 'react';
+import * as SplashScreen from 'expo-splash-screen';
+
+SplashScreen.preventAutoHideAsync();
 
 export default function Layout() {
+  const [fontsLoaded] = useFonts({
+    Inter_200ExtraLight,
+    Inter_300Light,
+    Inter_400Regular,
+    Inter_500Medium,
+    Inter_600SemiBold,
+    Inter_700Bold,
+  });
+
+  useEffect(() => {
+    if (fontsLoaded) {
+      SplashScreen.hideAsync();
+    }
+  }, [fontsLoaded]);
+
+  if (!fontsLoaded) {
+    return null;
+  }
+
   return (
     <AlarmProvider>
-      <Stack>
-        <Stack.Screen name="index" options={{ title: 'Alarms' }} />
-        <Stack.Screen
-          name="add-alarm"
-          options={{ presentation: 'modal', title: 'Add Alarm' }}
-        />
-      </Stack>
+      <Stack screenOptions={{ headerShown: false }} />
     </AlarmProvider>
   );
 }

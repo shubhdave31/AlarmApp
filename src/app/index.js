@@ -1,79 +1,97 @@
 import React from 'react';
-import { View, Text, FlatList, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, Dimensions } from 'react-native';
 import { useRouter } from 'expo-router';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useAlarm } from '@/context/AlarmContext';
 import AlarmCard from '@/components/AlarmCard';
+import ScreenBackground from '@/components/ScreenBackground';
 import { GlobalStyles } from '@/constants/Styles';
 import Colors from '@/constants/Colors';
+
+const { width } = Dimensions.get('window');
 
 export default function Home() {
     const { alarms } = useAlarm();
     const router = useRouter();
 
     return (
-        <LinearGradient
-            colors={Colors.dark.gradient}
-            style={GlobalStyles.container}
-        >
-            <FlatList
-                data={alarms}
-                keyExtractor={(item) => item.id}
-                contentContainerStyle={{ padding: 24, paddingBottom: 120 }}
-                renderItem={({ item }) => <AlarmCard alarm={item} />}
-                ListEmptyComponent={
-                    <View style={styles.emptyState}>
-                        <Text style={styles.emptyText}>No Alarms</Text>
-                        <Text style={styles.emptySubText}>Add one to get started</Text>
-                    </View>
-                }
-            />
+        <ScreenBackground>
+            <View style={GlobalStyles.contentContainer}>
+                <Text style={styles.headerTitle}>Alarms</Text>
 
-            <TouchableOpacity
-                style={styles.fab}
-                onPress={() => router.push('/add-alarm')}
-            >
-                <Text style={styles.fabText}>+</Text>
-            </TouchableOpacity>
-        </LinearGradient>
+                <FlatList
+                    data={alarms}
+                    keyExtractor={(item) => item.id}
+                    renderItem={({ item }) => <AlarmCard alarm={item} />}
+                    ListEmptyComponent={
+                        <View style={styles.emptyContainer}>
+                            <Text style={styles.emptyText}>No Alarms Set</Text>
+                            <Text style={styles.emptySubText}>Add one to get started</Text>
+                        </View>
+                    }
+                    contentContainerStyle={{ paddingBottom: 100 }}
+                />
+
+                <TouchableOpacity
+                    style={styles.fab}
+                    onPress={() => router.push('/add-alarm')}
+                    activeOpacity={0.8}
+                >
+                    <Text style={styles.fabIcon}>+</Text>
+                </TouchableOpacity>
+            </View>
+        </ScreenBackground>
     );
 }
 
 const styles = StyleSheet.create({
-    emptyState: {
+    headerTitle: {
+        fontFamily: 'Inter_700Bold',
+        fontSize: 34,
+        color: '#fff',
+        marginTop: 60,
+        marginBottom: 20,
+        marginLeft: 4,
+        letterSpacing: 0.5,
+    },
+    emptyContainer: {
+        flex: 1,
+        justifyContent: 'center',
         alignItems: 'center',
-        marginTop: 100,
+        marginTop: 150,
     },
     emptyText: {
-        fontSize: 24,
-        color: Colors.dark.textSecondary,
-        fontWeight: '600',
+        color: 'rgba(255,255,255,0.9)',
+        fontSize: 22,
+        fontFamily: 'Inter_600SemiBold',
+        marginBottom: 8,
     },
     emptySubText: {
+        color: 'rgba(255,255,255,0.5)',
         fontSize: 16,
-        color: '#666',
-        marginTop: 12,
+        fontFamily: 'Inter_400Regular',
     },
     fab: {
         position: 'absolute',
-        bottom: 32,
-        right: 32,
+        bottom: 40,
+        right: 20,
         width: 64,
         height: 64,
         borderRadius: 32,
         backgroundColor: Colors.dark.tint,
         justifyContent: 'center',
         alignItems: 'center',
-        elevation: 8,
         shadowColor: Colors.dark.tint,
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.4,
-        shadowRadius: 8,
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.5,
+        shadowRadius: 16,
+        elevation: 10,
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.3)',
     },
-    fabText: {
+    fabIcon: {
         fontSize: 32,
-        color: '#fff',
-        lineHeight: 34,
+        color: '#000',
         fontWeight: 'bold',
+        marginTop: -2,
     },
 });

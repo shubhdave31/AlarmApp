@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TextInput, Platform, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TextInput, Platform, TouchableOpacity, Dimensions } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useRouter } from 'expo-router';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useAlarm } from '@/context/AlarmContext';
 import { GlobalStyles } from '@/constants/Styles';
 import Colors from '@/constants/Colors';
+import ScreenBackground from '@/components/ScreenBackground';
+
+const { width } = Dimensions.get('window');
 
 export default function AddAlarm() {
     const [date, setDate] = useState(new Date());
@@ -28,135 +30,163 @@ export default function AddAlarm() {
     };
 
     return (
-        <LinearGradient
-            colors={Colors.dark.gradient}
-            style={GlobalStyles.container}
-        >
+        <ScreenBackground>
             <View style={GlobalStyles.contentContainer}>
-                <Text style={GlobalStyles.title}>New Alarm</Text>
+                <Text style={styles.headerTitle}>New Alarm</Text>
 
-                <View style={styles.inputContainer}>
-                    <Text style={styles.label}>LABEL</Text>
-                    <TextInput
-                        style={styles.input}
-                        placeholder="e.g. Work, Gym"
-                        placeholderTextColor="rgba(255,255,255,0.3)"
-                        value={label}
-                        onChangeText={setLabel}
-                    />
-                </View>
+                <View style={styles.formContainer}>
+                    <View style={styles.inputGroup}>
+                        <Text style={styles.label}>LABEL</Text>
+                        <TextInput
+                            style={styles.input}
+                            placeholder="e.g. Morning Workout"
+                            placeholderTextColor="rgba(255,255,255,0.3)"
+                            value={label}
+                            onChangeText={setLabel}
+                            selectionColor={Colors.dark.tint}
+                        />
+                    </View>
 
-                <View style={styles.inputContainer}>
-                    <Text style={styles.label}>TIME</Text>
-                    <View style={styles.pickerContainer}>
-                        {Platform.OS === 'android' && (
-                            <TouchableOpacity onPress={() => setShowPicker(true)}>
-                                <Text style={styles.timeText}>
-                                    {date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })}
-                                </Text>
-                            </TouchableOpacity>
-                        )}
+                    <View style={styles.inputGroup}>
+                        <Text style={styles.label}>TIME</Text>
+                        <View style={styles.timeContainer}>
+                            {Platform.OS === 'android' && (
+                                <TouchableOpacity onPress={() => setShowPicker(true)}>
+                                    <Text style={styles.timeDisplay}>
+                                        {date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })}
+                                    </Text>
+                                </TouchableOpacity>
+                            )}
 
-                        {Platform.OS === 'web' ? (
-                            React.createElement('input', {
-                                type: 'time',
-                                value: date.toTimeString().slice(0, 5),
-                                onChange: (e) => {
-                                    const [hours, minutes] = e.target.value.split(':');
-                                    const newDate = new Date(date);
-                                    newDate.setHours(hours);
-                                    newDate.setMinutes(minutes);
-                                    onChange(null, newDate);
-                                },
-                                style: {
-                                    width: '100%',
-                                    padding: '12px',
-                                    fontSize: '16px',
-                                    borderRadius: '8px',
-                                    border: '1px solid #ccc',
-                                    backgroundColor: 'white',
-                                    color: 'black',
-                                }
-                            })
-                        ) : (
-                            (showPicker || Platform.OS !== 'android') && (
-                                <DateTimePicker
-                                    testID="dateTimePicker"
-                                    value={date}
-                                    mode="time"
-                                    is24Hour={true}
-                                    onChange={onChange}
-                                    display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                                    textColor="white"
-                                />
-                            )
-                        )}
+                            {Platform.OS === 'web' ? (
+                                React.createElement('input', {
+                                    type: 'time',
+                                    value: date.toTimeString().slice(0, 5),
+                                    onChange: (e) => {
+                                        const [hours, minutes] = e.target.value.split(':');
+                                        const newDate = new Date(date);
+                                        newDate.setHours(hours);
+                                        newDate.setMinutes(minutes);
+                                        onChange(null, newDate);
+                                    },
+                                    style: {
+                                        width: '100%',
+                                        padding: '10px',
+                                        fontSize: '18px',
+                                        fontFamily: 'Inter',
+                                        borderRadius: '8px',
+                                        border: 'none',
+                                        backgroundColor: '#2C2C2E',
+                                        color: Colors.dark.tint,
+                                        outline: 'none',
+                                        textAlign: 'right'
+                                    }
+                                })
+                            ) : (
+                                (showPicker || Platform.OS !== 'android') && (
+                                    <DateTimePicker
+                                        testID="dateTimePicker"
+                                        value={date}
+                                        mode="time"
+                                        is24Hour={true}
+                                        onChange={onChange}
+                                        display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                                        textColor="white"
+                                    />
+                                )
+                            )}
+                        </View>
                     </View>
                 </View>
 
-                <TouchableOpacity style={styles.saveBtn} onPress={handleSave}>
-                    <Text style={styles.saveBtnText}>Save Alarm</Text>
-                </TouchableOpacity>
+                <View style={styles.actionContainer}>
+                    <TouchableOpacity style={styles.saveBtn} onPress={handleSave} activeOpacity={0.8}>
+                        <Text style={styles.saveBtnText}>Create Alarm</Text>
+                    </TouchableOpacity>
 
-                <TouchableOpacity style={styles.cancelBtn} onPress={() => router.back()}>
-                    <Text style={styles.cancelBtnText}>Cancel</Text>
-                </TouchableOpacity>
+                    <TouchableOpacity style={styles.cancelBtn} onPress={() => router.back()}>
+                        <Text style={styles.cancelBtnText}>Cancel</Text>
+                    </TouchableOpacity>
+                </View>
             </View>
-        </LinearGradient>
+        </ScreenBackground>
     );
 }
 
 const styles = StyleSheet.create({
-    inputContainer: {
-        marginBottom: 24,
+    headerTitle: {
+        fontFamily: 'Inter_700Bold',
+        fontSize: 32,
+        color: '#fff',
+        marginTop: 40,
+        marginBottom: 30,
+        paddingHorizontal: 20,
+    },
+    formContainer: {
+        backgroundColor: '#1C1C1E', // Dark Gray Surface
+        borderRadius: 16,
+        padding: 0, // List style
+        marginBottom: 32,
+        overflow: 'hidden',
+    },
+    inputGroup: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        padding: 16,
+        borderBottomWidth: 1,
+        borderBottomColor: '#2C2C2E', // Separator
+        minHeight: 60,
     },
     label: {
+        fontFamily: 'Inter_400Regular',
         fontSize: 16,
-        marginBottom: 8,
-        color: Colors.dark.textSecondary,
-        fontWeight: '500',
+        color: '#fff',
+        flex: 1,
     },
     input: {
-        backgroundColor: Colors.dark.inputBackground,
-        color: Colors.dark.text,
-        padding: 16,
-        borderRadius: 12,
-        fontSize: 18,
+        fontFamily: 'Inter_400Regular',
+        fontSize: 16,
+        color: Colors.dark.tint,
+        textAlign: 'right',
+        flex: 2,
+        padding: 0,
     },
-    pickerContainer: {
-        alignItems: 'center',
-        backgroundColor: Colors.dark.inputBackground,
-        borderRadius: 12,
-        padding: 16,
+    timeContainer: {
+        alignItems: 'flex-end',
+    },
+    timeDisplay: {
+        fontFamily: 'Inter_400Regular',
+        fontSize: 18,
+        color: Colors.dark.tint,
+        backgroundColor: 'rgba(255,159,10, 0.15)',
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        borderRadius: 8,
+        overflow: 'hidden',
+    },
+    actionContainer: {
+        paddingHorizontal: 20,
+        gap: 12,
     },
     saveBtn: {
         backgroundColor: Colors.dark.tint,
         padding: 18,
-        borderRadius: 16,
+        borderRadius: 12,
         alignItems: 'center',
-        marginTop: 24,
-        shadowColor: Colors.dark.tint,
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
-        shadowRadius: 8,
     },
     saveBtnText: {
-        color: '#fff',
-        fontSize: 18,
-        fontWeight: 'bold',
+        fontFamily: 'Inter_600SemiBold',
+        color: '#000',
+        fontSize: 17,
     },
     cancelBtn: {
         padding: 16,
         alignItems: 'center',
-        marginTop: 8,
     },
     cancelBtnText: {
-        color: Colors.dark.textSecondary,
-        fontSize: 16,
-    },
-    timeText: {
-        fontSize: 32,
-        color: Colors.dark.text,
-        fontWeight: 'bold',
+        fontFamily: 'Inter_400Regular',
+        color: Colors.dark.tint,
+        fontSize: 17,
     },
 });

@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, Switch, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, Switch, StyleSheet, TouchableOpacity, Alert, Vibration } from 'react-native';
 import { useAlarm } from '@/context/AlarmContext';
 import Colors from '@/constants/Colors';
 
@@ -7,84 +7,92 @@ export default function AlarmCard({ alarm }) {
     const { toggleAlarm, deleteAlarm } = useAlarm();
     const date = new Date(alarm.time);
 
-    // Format time (e.g., 08:30 AM)
+    // Format time (e.g., 08:30)
     const timeString = date.toLocaleTimeString([], {
         hour: '2-digit',
         minute: '2-digit',
+        hour12: false
     });
 
+    const handleDelete = () => {
+        Alert.alert('Delete Alarm', 'Are you sure?', [
+            { text: 'Cancel', style: 'cancel' },
+            {
+                text: 'Delete',
+                style: 'destructive',
+                onPress: () => {
+                    Vibration.vibrate(50);
+                    deleteAlarm(alarm.id);
+                }
+            }
+        ]);
+    };
+
     return (
-        <View style={styles.card}>
-            <View style={styles.info}>
-                <Text style={styles.time}>{timeString}</Text>
-                <Text style={styles.label}>{alarm.label}</Text>
-            </View>
-            <View style={styles.actions}>
-                <Switch
-                    value={alarm.isActive}
-                    onValueChange={() => toggleAlarm(alarm.id)}
-                    trackColor={{ false: '#767577', true: Colors.light.tint }}
-                    thumbColor={alarm.isActive ? '#fff' : '#f4f3f4'}
-                />
-                <TouchableOpacity
-                    onPress={() => deleteAlarm(alarm.id)}
-                    style={styles.deleteBtn}
-                >
-                    <Text style={styles.deleteText}>Delete</Text>
-                </TouchableOpacity>
+        <View style={styles.cardContainer}>
+            <View style={styles.content}>
+                <View style={styles.info}>
+                    <Text style={[styles.time, !alarm.active && styles.timeInactive]}>
+                        {timeString}
+                    </Text>
+                    <Text style={styles.label}>{alarm.label}</Text>
+                </View>
+
+                <View style={styles.controls}>
+                    <Switch
+                        value={alarm.active}
+                        onValueChange={() => toggleAlarm(alarm.id)}
+                        trackColor={{ false: '#3A3A3C', true: '#32D74B' }} // iOS Green
+                        thumbColor={'#fff'}
+                    />
+                    <TouchableOpacity onPress={handleDelete} hitSlop={10}>
+                        <Text style={styles.deleteText}>Delete</Text>
+                    </TouchableOpacity>
+                </View>
             </View>
         </View>
     );
 }
 
 const styles = StyleSheet.create({
-    card: {
+    cardContainer: {
+        backgroundColor: Colors.dark.surface,
+        borderRadius: 16,
+        padding: 20,
+        marginBottom: 12,
+        borderBottomWidth: 1,
+        borderBottomColor: '#2C2C2E',
+    },
+    content: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        backgroundColor: Colors.dark.surface,
-        borderColor: 'rgba(255,255,255,0.05)',
-        borderWidth: 1,
-        padding: 24,
-        borderRadius: 20,
-        marginBottom: 16,
-        // Glassmorphism shadow hint
-        shadowColor: Colors.dark.tint,
-        shadowOffset: { width: 0, height: 8 },
-        shadowOpacity: 0.15,
-        shadowRadius: 16,
     },
     info: {
-        flex: 1,
+        gap: 2,
     },
     time: {
-        fontSize: 56,
-        fontWeight: '100', // Ultra-thin
-        color: Colors.dark.text,
-        letterSpacing: -2,
-        fontVariant: ['tabular-nums'],
+        fontSize: 52,
+        fontFamily: 'Inter_300Light',
+        color: '#fff',
+        letterSpacing: -1,
+    },
+    timeInactive: {
+        opacity: 0.5,
     },
     label: {
-        fontSize: 14,
+        fontSize: 15,
+        fontFamily: 'Inter_400Regular',
         color: Colors.dark.textSecondary,
-        marginTop: 0,
-        fontWeight: '600',
-        letterSpacing: 1,
-        textTransform: 'uppercase',
     },
-    actions: {
-        alignItems: 'center',
-        flexDirection: 'row',
-        gap: 16,
-    },
-    deleteBtn: {
-        padding: 8,
-        backgroundColor: 'rgba(255, 0, 0, 0.1)',
-        borderRadius: 8,
+    controls: {
+        alignItems: 'flex-end',
+        gap: 12,
     },
     deleteText: {
-        color: '#FF453A', // iOS Red
-        fontSize: 12,
-        fontWeight: '700',
+        color: '#FF453A', // System Red
+        fontSize: 14,
+        fontFamily: 'Inter_500Medium',
+        marginTop: 4,
     },
 });
