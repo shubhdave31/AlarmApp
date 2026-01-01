@@ -1,0 +1,6 @@
+@echo off
+echo Setting up Node.js Environment...
+set "PATH=%PATH%;C:\Program Files\nodejs"
+echo Starting EAS Build for Android...
+call npx eas-cli build --profile development --platform android
+pause

@@ -20,7 +20,8 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "package": "com.shubh_dave.AlarmApp"
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -28,6 +29,12 @@
     "plugins": [
       "expo-router",
       "expo-font"
-    ]
+    ],
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "ddf6b8e2-7cc8-4e85-8ca5-46b94e1e2550"
+      }
+    }
   }
 }

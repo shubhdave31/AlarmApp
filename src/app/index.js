@@ -1,9 +1,10 @@
-import React from 'react';
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, Dimensions } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, Dimensions, Modal } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAlarm } from '@/context/AlarmContext';
 import AlarmCard from '@/components/AlarmCard';
 import ScreenBackground from '@/components/ScreenBackground';
+import AlarmTrigger from '@/components/AlarmTrigger';
 import { GlobalStyles } from '@/constants/Styles';
 import Colors from '@/constants/Colors';
 
@@ -12,11 +13,27 @@ const { width } = Dimensions.get('window');
 export default function Home() {
     const { alarms } = useAlarm();
     const router = useRouter();
+    const [isAlarmActive, setAlarmActive] = useState(false);
+
+    if (isAlarmActive) {
+        return (
+            <AlarmTrigger
+                onDismiss={() => setAlarmActive(false)}
+            />
+        );
+    }
 
     return (
         <ScreenBackground>
             <View style={GlobalStyles.contentContainer}>
                 <Text style={styles.headerTitle}>Alarms</Text>
+
+                <TouchableOpacity
+                    style={styles.testButton}
+                    onPress={() => setAlarmActive(true)}
+                >
+                    <Text style={styles.testButtonText}>Test Alarm UI</Text>
+                </TouchableOpacity>
 
                 <FlatList
                     data={alarms}
@@ -52,6 +69,22 @@ const styles = StyleSheet.create({
         marginBottom: 20,
         marginLeft: 4,
         letterSpacing: 0.5,
+    },
+    testButton: {
+        backgroundColor: 'rgba(255, 59, 48, 0.2)',
+        paddingVertical: 8,
+        paddingHorizontal: 16,
+        borderRadius: 20,
+        alignSelf: 'flex-start',
+        marginLeft: 4,
+        marginBottom: 20,
+        borderWidth: 1,
+        borderColor: '#FF3B30',
+    },
+    testButtonText: {
+        color: '#FF3B30',
+        fontFamily: 'Inter_600SemiBold',
+        fontSize: 14,
     },
     emptyContainer: {
         flex: 1,
