@@ -1,5 +1,6 @@
 import { Stack } from 'expo-router';
-import { AlarmProvider } from '@/context/AlarmContext';
+import { AlarmProvider, useAlarm } from '@/context/AlarmContext';
+import ActiveAlarmScreen from '@/screens/ActiveAlarmScreen';
 import { useFonts, Inter_200ExtraLight, Inter_300Light, Inter_400Regular, Inter_500Medium, Inter_600SemiBold, Inter_700Bold } from '@expo-google-fonts/inter';
 import { useEffect } from 'react';
 import * as SplashScreen from 'expo-splash-screen';
@@ -28,7 +29,18 @@ export default function Layout() {
 
   return (
     <AlarmProvider>
-      <Stack screenOptions={{ headerShown: false }} />
+      <AlarmMonitor />
     </AlarmProvider>
+  );
+}
+
+function AlarmMonitor() {
+  const { isAlarmRinging } = useAlarm();
+
+  return (
+    <>
+      <Stack screenOptions={{ headerShown: false }} />
+      {isAlarmRinging && <ActiveAlarmScreen />}
+    </>
   );
 }

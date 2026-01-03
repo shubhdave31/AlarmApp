@@ -12,6 +12,7 @@ const { width } = Dimensions.get('window');
 export default function AddAlarm() {
     const [date, setDate] = useState(new Date());
     const [label, setLabel] = useState('');
+    const [dismissMode, setDismissMode] = useState('face'); // 'face' | 'qr'
     const [showPicker, setShowPicker] = useState(false);
     const { addAlarm } = useAlarm();
     const router = useRouter();
@@ -25,7 +26,7 @@ export default function AddAlarm() {
     };
 
     const handleSave = () => {
-        addAlarm(date.toISOString(), label || 'Alarm');
+        addAlarm(date.toISOString(), label || 'Alarm', dismissMode);
         router.back();
     };
 
@@ -99,17 +100,36 @@ export default function AddAlarm() {
                     </View>
                 </View>
 
-                <View style={styles.actionContainer}>
-                    <TouchableOpacity style={styles.saveBtn} onPress={handleSave} activeOpacity={0.8}>
-                        <Text style={styles.saveBtnText}>Create Alarm</Text>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity style={styles.cancelBtn} onPress={() => router.back()}>
-                        <Text style={styles.cancelBtnText}>Cancel</Text>
-                    </TouchableOpacity>
+                <View style={styles.inputGroup}>
+                    <Text style={styles.label}>DISMISS MODE</Text>
+                    <View style={styles.modeContainer}>
+                        <TouchableOpacity
+                            style={[styles.modeBtn, dismissMode === 'face' && styles.modeBtnActive]}
+                            onPress={() => setDismissMode('face')}
+                        >
+                            <Text style={[styles.modeText, dismissMode === 'face' && styles.modeTextActive]}>Face</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            style={[styles.modeBtn, dismissMode === 'qr' && styles.modeBtnActive]}
+                            onPress={() => setDismissMode('qr')}
+                        >
+                            <Text style={[styles.modeText, dismissMode === 'qr' && styles.modeTextActive]}>QR</Text>
+                        </TouchableOpacity>
+                    </View>
                 </View>
             </View>
-        </ScreenBackground>
+
+            <View style={styles.actionContainer}>
+                <TouchableOpacity style={styles.saveBtn} onPress={handleSave} activeOpacity={0.8}>
+                    <Text style={styles.saveBtnText}>Create Alarm</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity style={styles.cancelBtn} onPress={() => router.back()}>
+                    <Text style={styles.cancelBtnText}>Cancel</Text>
+                </TouchableOpacity>
+            </View>
+
+        </ScreenBackground >
     );
 }
 
@@ -164,6 +184,32 @@ const styles = StyleSheet.create({
         paddingVertical: 6,
         borderRadius: 8,
         overflow: 'hidden',
+        borderRadius: 8,
+        overflow: 'hidden',
+    },
+    modeContainer: {
+        flexDirection: 'row',
+        gap: 8,
+    },
+    modeBtn: {
+        paddingVertical: 6,
+        paddingHorizontal: 12,
+        borderRadius: 8,
+        backgroundColor: '#2C2C2E',
+        borderWidth: 1,
+        borderColor: '#3A3A3C',
+    },
+    modeBtnActive: {
+        backgroundColor: Colors.dark.tint,
+        borderColor: Colors.dark.tint,
+    },
+    modeText: {
+        color: '#8E8E93',
+        fontFamily: 'Inter_600SemiBold',
+        fontSize: 14,
+    },
+    modeTextActive: {
+        color: '#000',
     },
     actionContainer: {
         paddingHorizontal: 20,

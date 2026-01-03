@@ -11,14 +11,13 @@ import Colors from '@/constants/Colors';
 const { width } = Dimensions.get('window');
 
 export default function Home() {
-    const { alarms } = useAlarm();
+    const { alarms, isAlarmRinging, stopAlarm } = useAlarm();
     const router = useRouter();
-    const [isAlarmActive, setAlarmActive] = useState(false);
 
-    if (isAlarmActive) {
+    if (isAlarmRinging) {
         return (
             <AlarmTrigger
-                onDismiss={() => setAlarmActive(false)}
+                onDismiss={stopAlarm}
             />
         );
     }
@@ -27,13 +26,6 @@ export default function Home() {
         <ScreenBackground>
             <View style={GlobalStyles.contentContainer}>
                 <Text style={styles.headerTitle}>Alarms</Text>
-
-                <TouchableOpacity
-                    style={styles.testButton}
-                    onPress={() => setAlarmActive(true)}
-                >
-                    <Text style={styles.testButtonText}>Test Alarm UI</Text>
-                </TouchableOpacity>
 
                 <FlatList
                     data={alarms}

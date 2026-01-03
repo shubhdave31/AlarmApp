@@ -1,3 +1,4 @@
 @echo off
-set "PATH=%PATH%;C:\Program Files\nodejs"
-npm start -- --port 8082 --clear --dev-client
+set PATH=%PATH%;C:\Program Files\nodejs
+cd /d "%~dp0"
+npm start -- --port 8087 --clear --dev-client --tunnel
