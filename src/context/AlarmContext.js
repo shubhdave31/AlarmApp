@@ -3,7 +3,7 @@ import { Alert, Vibration, Platform } from 'react-native';
 import 'react-native-get-random-values';
 import { v4 as uuidv4 } from 'uuid';
 import * as Notifications from 'expo-notifications';
-import { Audio, InterruptionModeIOS, InterruptionModeAndroid } from 'expo-av'; // Fixed Imports
+import { playAlarmSound, stopAlarmSound } from '@/services/AudioService';
 import { scheduleAlarm as serviceScheduleAlarm, cancelAlarmNotification } from '@/services/AlarmService';
 
 const AlarmContext = createContext();
@@ -14,7 +14,9 @@ export const AlarmProvider = ({ children }) => {
     const [alarms, setAlarms] = useState([]);
     const [isAlarmRinging, setAlarmRinging] = useState(false);
     const [alarmMetadata, setAlarmMetadata] = useState(null);
-    const soundRef = React.useRef(null); // Use Ref for persistent sound object
+
+    // Lock to prevent duplicate async triggers
+    const isTriggerProcessing = React.useRef(false);
 
     // Listener for Notifications
     useEffect(() => {
@@ -46,77 +48,62 @@ export const AlarmProvider = ({ children }) => {
             const target = new Date(data.targetTime).getTime();
             const diff = target - now;
 
-            // If it's too early (>10s), don't trigger UI. 
-            // Instead, wait for the remaining time using JS.
-            if (diff > 10000) {
-                console.log(`[AlarmContext] Early trigger. Waiting ${diff}ms in JS.`);
+            console.log(`[AlarmContext] Notification received. Target in: ${diff}ms`);
 
-                // Fallback: Use JS timer to finish the wait
+            // If it's too early (> 3 seconds), SILENCE IT.
+            // This catches "immediate" notifications that fired wrongly.
+            if (diff > 3000) {
+                console.log(`[AlarmContext] Too early. Suppressing immediate trigger. Waiting ${diff}ms.`);
+
+                // Set a timer to wake up later
                 setTimeout(() => {
+                    console.log("[AlarmContext] Wait finished. Triggering now.");
                     triggerAlarm(data);
                 }, diff);
 
-                return;
+                return; // EXIT - DO NOT RING NOW
             }
         }
         triggerAlarm(data);
     };
 
     const triggerAlarm = async (data = {}) => {
-        if (isAlarmRinging) {
-            console.log("Alarm already ringing, ignoring duplicate trigger.");
+        // Double Check Locking
+        if (isAlarmRinging || isTriggerProcessing.current) {
+            console.log("Alarm active or processing. Ignoring duplicate.");
             return;
         }
-        console.log("ALARM TRIGGERED! Playing Sound...");
-        setAlarmRinging(true);
-        setAlarmMetadata(data);
 
-        // Stop any previous sound if it exists just in case
-        if (soundRef.current) {
-            try {
-                await soundRef.current.unloadAsync();
-            } catch (e) {
-                console.log("Cleanup error:", e);
-            }
-            soundRef.current = null;
-        }
-
-        // Play Sound
         try {
-            await Audio.setAudioModeAsync({
-                allowsRecordingIOS: false,
-                staysActiveInBackground: true,
-                interruptionModeIOS: InterruptionModeIOS.DoNotMix,
-                playsInSilentModeIOS: true,
-                shouldDuckAndroid: true,
-                interruptionModeAndroid: InterruptionModeAndroid.DoNotMix,
-                playThroughEarpieceAndroid: false,
-            });
+            isTriggerProcessing.current = true;
+            console.log("ALARM TRIGGERED! Playing Sound...");
 
-            const { sound: newSound } = await Audio.Sound.createAsync(
-                // Using a default URI for now (Standard Beep)
-                { uri: 'https://actions.google.com/sounds/v1/alarms/digital_watch_alarm_long.ogg' },
-                { shouldPlay: true, isLooping: true, volume: 1.0 }
-            );
-            soundRef.current = newSound;
-            await newSound.playAsync();
-        } catch (error) {
-            console.error("Failed to play alarm sound", error);
-            Alert.alert("Error", "Could not play sound.");
+            // 1. Play Sound (Global Service)
+            await playAlarmSound();
+
+            // 2. Update State (Show UI)
+            setAlarmMetadata(data);
+            setAlarmRinging(true);
+        } catch (e) {
+            console.error(e);
+        } finally {
+            // Unlock after a brief delay to ensure state has propagated
+            setTimeout(() => {
+                isTriggerProcessing.current = false;
+            }, 1000);
         }
     };
 
     const stopAlarm = async () => {
         try {
+            console.log("Stopping Alarm UI & Sound...");
+
+            // 1. Stop Sound (Global Service)
+            await stopAlarmSound();
+
+            // 2. Hide UI
             setAlarmRinging(false);
             setAlarmMetadata(null);
-            // Stop Sound
-            if (soundRef.current) {
-                console.log("Stopping Sound...");
-                await soundRef.current.stopAsync();
-                await soundRef.current.unloadAsync();
-                soundRef.current = null;
-            }
         } catch (error) {
             console.error("Error stopping alarm:", error);
         }
@@ -138,16 +125,14 @@ export const AlarmProvider = ({ children }) => {
 
         console.log(`[AlarmContext] Scheduling for: ${targetDate.toLocaleString()}`);
 
-        // Calculate verified seconds
-        const finalDiff = (targetDate.getTime() - new Date().getTime()) / 1000;
-        const finalSeconds = Math.max(1, finalDiff);
-
         // Pass targetTime and metadata for verification and UI
-        const notificationId = await serviceScheduleAlarm(finalSeconds, {
+        const notificationId = await serviceScheduleAlarm(targetDate, {
             targetTime: targetDate.toISOString(),
             label,
             dismissMode
         });
+
+        Alert.alert("DEBUG: Alarm Set", `Scheduled for:\n${targetDate.toLocaleTimeString()}`);
 
         const newAlarm = {
             id: uuidv4(),

@@ -45,16 +45,26 @@ export default function ActiveAlarmScreen() {
         };
     }, [permission, isQRMode]);
 
-    const handleBarcodeScanned = ({ type, data }) => {
+    const onAlarmDismissed = React.useCallback(() => {
+        setTimeout(() => {
+            stopAlarm();
+            Alert.alert("Alarm Dismissed", "Good morning!");
+        }, 0);
+    }, []);
+
+    const handleBarcodeScanned = React.useCallback(({ type, data }) => {
         if (scanned || !isQRMode) return;
 
         // For now, accept any QR code to dismiss
         setScanned(true);
         onAlarmDismissed();
-    };
+    }, [scanned, isQRMode, onAlarmDismissed]);
 
     const startDetectionLoop = () => {
+        if (detectionLoop.current) clearInterval(detectionLoop.current);
+
         detectionLoop.current = setInterval(async () => {
+            // Prevent overlap and ensure mounted
             if (isDetecting.current || !cameraRef.current || !isMounted.current) return;
 
             try {
@@ -77,10 +87,7 @@ export default function ActiveAlarmScreen() {
                     if (isMounted.current) {
                         if (result.faces.length > 0) {
                             setFaceDetected(true);
-                            // Start progress if not already started
-                            if (!progressInterval.current) {
-                                startProgress();
-                            }
+                            startProgress(); // Will check internal flag to not duplicate
                         } else {
                             setFaceDetected(false);
                             stopProgress();
@@ -92,7 +99,7 @@ export default function ActiveAlarmScreen() {
             } finally {
                 isDetecting.current = false;
             }
-        }, 800); // Check every 800ms to balance performance
+        }, 1000); // CHECK EVERY 1s to reduce flashing annoyance
     };
 
     const stopDetectionLoop = () => {
@@ -107,7 +114,7 @@ export default function ActiveAlarmScreen() {
 
         progressInterval.current = setInterval(() => {
             setProgress((prev) => {
-                const next = prev + 5;
+                const next = prev + 2; // SLOWER FILL (~5 seconds total: 50 ticks * 100ms)
                 if (next >= 100) {
                     clearInterval(progressInterval.current);
                     progressInterval.current = null;
@@ -116,7 +123,7 @@ export default function ActiveAlarmScreen() {
                 }
                 return next;
             });
-        }, 100); // Fills in ~2 seconds
+        }, 100);
     };
 
     const stopProgress = () => {
@@ -127,15 +134,6 @@ export default function ActiveAlarmScreen() {
         if (isMounted.current) {
             setProgress(0);
         }
-    };
-
-    const onAlarmDismissed = () => {
-        // Wrap in setTimeout to avoid 'Cannot update during render' issues
-        // if this was triggered deeply in the react tree or by an effect
-        setTimeout(() => {
-            stopAlarm();
-            Alert.alert("Alarm Dismissed", "Good morning!");
-        }, 0);
     };
 
     if (!permission) {
@@ -157,78 +155,86 @@ export default function ActiveAlarmScreen() {
 
     return (
         <View style={styles.container}>
-            <CameraView
-                ref={cameraRef}
-                style={StyleSheet.absoluteFill}
-                facing={isQRMode ? "back" : "front"}
+            <MemoizedCamera
+                cameraRef={cameraRef}
+                isQRMode={isQRMode}
                 onBarcodeScanned={isQRMode ? handleBarcodeScanned : undefined}
-                barcodeScannerSettings={{
-                    barcodeTypes: [
-                        "qr",
-                        "ean13",
-                        "ean8",
-                        "pdf417",
-                        "aztec",
-                        "datamatrix",
-                        "code39",
-                        "code93",
-                        "itf14",
-                        "codabar",
-                        "code128",
-                        "upc_e",
-                        "upc_a"
-                    ],
-                }}
+            />
+            <LinearGradient
+                colors={['rgba(0,0,0,0.6)', 'transparent', 'rgba(0,0,0,0.8)']}
+                style={styles.overlay}
             >
-                <LinearGradient
-                    colors={['rgba(0,0,0,0.6)', 'transparent', 'rgba(0,0,0,0.8)']}
-                    style={styles.overlay}
-                >
-                    <View style={styles.header}>
-                        <Text style={styles.title}>ALARM ACTIVE</Text>
-                        <Text style={styles.subtitle}>
-                            {alarmMetadata?.label || "Wake Up!"}
-                        </Text>
-                    </View>
+                <View style={styles.header}>
+                    <Text style={styles.title}>ALARM ACTIVE</Text>
+                    <Text style={styles.subtitle}>
+                        {alarmMetadata?.label || "Wake Up!"}
+                    </Text>
+                </View>
 
-                    <View style={styles.centerRegion}>
-                        {!isQRMode ? (
-                            // FACE MODE UI
-                            <>
-                                <View style={[styles.faceBox, faceDetected && styles.faceBoxActive]}>
-                                    {faceDetected && <View style={styles.scanLine} />}
-                                </View>
-                                <Text style={styles.instructionText}>
-                                    {faceDetected ? "Hold still..." : "Scan Face to Stop"}
-                                </Text>
-                            </>
-                        ) : (
-                            // QR MODE UI
-                            <>
-                                <View style={[styles.qrBox, scanned && styles.qrBoxActive]} />
-                                <Text style={styles.instructionText}>
-                                    {scanned ? "Scanned!" : "Scan ANY QR Code"}
-                                </Text>
-                            </>
-                        )}
-                    </View>
-
-                    <View style={styles.footer}>
-                        {/* Only show progress bar for Face Mode */}
-                        {!isQRMode && faceDetected && (
-                            <View style={styles.progressBarContainer}>
-                                <View style={[styles.progressBar, { width: `${progress}%` }]} />
+                <View style={styles.centerRegion}>
+                    {!isQRMode ? (
+                        // FACE MODE UI
+                        <>
+                            <View style={[styles.faceBox, faceDetected && styles.faceBoxActive]}>
+                                {/* Scan Line Removed */}
                             </View>
-                        )}
-                        <TouchableOpacity onPress={stopAlarm} style={styles.testButton}>
-                            <Text style={styles.testButtonText}>Emergency Stop (Dev)</Text>
-                        </TouchableOpacity>
-                    </View>
-                </LinearGradient>
-            </CameraView>
+                            <Text style={styles.instructionText}>
+                                {faceDetected ? "Hold still..." : "Scan Face to Stop"}
+                            </Text>
+                        </>
+                    ) : (
+                        // QR MODE UI
+                        <>
+                            <View style={[styles.qrBox, scanned && styles.qrBoxActive]} />
+                            <Text style={styles.instructionText}>
+                                {scanned ? "Scanned!" : "Scan ANY QR Code"}
+                            </Text>
+                        </>
+                    )}
+                </View>
+
+                <View style={styles.footer}>
+                    {/* Only show progress bar for Face Mode */}
+                    {!isQRMode && faceDetected && (
+                        <View style={styles.progressBarContainer}>
+                            <View style={[styles.progressBar, { width: `${progress}%` }]} />
+                        </View>
+                    )}
+                    <TouchableOpacity onPress={stopAlarm} style={styles.testButton}>
+                        <Text style={styles.testButtonText}>Emergency Stop (v2.1 Fix)</Text>
+                    </TouchableOpacity>
+                </View>
+            </LinearGradient>
         </View >
     );
 }
+
+// Extract Camera to prevent re-renders when progress/overlay state changes
+const MemoizedCamera = React.memo(({ cameraRef, isQRMode, onBarcodeScanned }) => (
+    <CameraView
+        ref={cameraRef}
+        style={StyleSheet.absoluteFill}
+        facing={isQRMode ? "back" : "front"}
+        onBarcodeScanned={onBarcodeScanned}
+        barcodeScannerSettings={{
+            barcodeTypes: [
+                "qr",
+                "ean13",
+                "ean8",
+                "pdf417",
+                "aztec",
+                "datamatrix",
+                "code39",
+                "code93",
+                "itf14",
+                "codabar",
+                "code128",
+                "upc_e",
+                "upc_a"
+            ],
+        }}
+    />
+));
 
 const styles = StyleSheet.create({
     container: {
@@ -275,12 +281,6 @@ const styles = StyleSheet.create({
     faceBoxActive: {
         borderColor: '#34C759',
         borderWidth: 4,
-    },
-    scanLine: {
-        width: '100%',
-        height: 2,
-        backgroundColor: '#34C759',
-        opacity: 0.7,
     },
     instructionText: {
         color: '#FFF',

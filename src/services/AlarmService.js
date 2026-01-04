@@ -3,36 +3,56 @@ import { Platform, Alert } from 'react-native';
 
 Notifications.setNotificationHandler({
     handleNotification: async () => ({
-        shouldShowAlert: true,
+        shouldShowBanner: true,
+        shouldShowList: true,
         shouldPlaySound: true,
         shouldSetBadge: false,
     }),
 });
 
-export const scheduleAlarm = async (seconds, extraData = {}) => {
+export const scheduleAlarm = async (triggerInput, extraData = {}) => {
     await requestPermissions();
 
-    const triggerSeconds = Math.max(1, Math.floor(seconds));
+    let trigger;
+    let logMsg;
 
-    // DEBUG: Log to console instead of Alert
-    console.log(`[AlarmService] Scheduling for: ${triggerSeconds} seconds`);
+    // Simplify Trigger Logic: Always use Seconds (TimeInterval) to ensure Channel ID support
+    let seconds;
+    if (triggerInput instanceof Date) {
+        logMsg = `Timestamp: ${triggerInput.toLocaleString()}`;
+        const now = new Date().getTime();
+        const diff = (triggerInput.getTime() - now) / 1000;
+        seconds = Math.max(1, Math.floor(diff));
+        logMsg += ` (in ${seconds}s)`;
+    } else {
+        seconds = Math.max(1, Math.floor(triggerInput));
+        logMsg = `Seconds: ${seconds}`;
+    }
 
-    console.log(`[AlarmService] Scheduling for: ${triggerSeconds}s`);
+    // Explicitly use TimeIntervalTrigger with Type and ChannelID
+    trigger = {
+        type: 'timeInterval',
+        seconds,
+        channelId: 'alarm-max-v2',
+        repeats: false
+    };
+
+    // DEBUG: Log to console
+    console.log(`[AlarmService] Scheduling via ${logMsg}`);
 
     try {
         const id = await Notifications.scheduleNotificationAsync({
             content: {
-                title: "Alarm Set",
-                body: "Waiting for target time...",
-                sound: false, // SILENT
-                priority: Notifications.AndroidNotificationPriority.LOW,
+                title: "Wake Up!",
+                body: extraData.label || "Time to get up!",
+                sound: 'default',
+                priority: Notifications.AndroidNotificationPriority.MAX,
                 data: { type: 'ALARM_TRIGGER', ...extraData },
+                autoDismiss: false,
+                sticky: true,
+                channelId: 'alarm-max-v2',
             },
-            trigger: {
-                seconds: triggerSeconds,
-                channelId: 'default',
-                repeats: false,
-            },
+            trigger,
         });
         return id;
     } catch (error) {
@@ -53,11 +73,15 @@ export const cancelAlarmNotification = async (notificationId) => {
 
 const requestPermissions = async () => {
     if (Platform.OS === 'android') {
-        await Notifications.setNotificationChannelAsync('default', {
-            name: 'default',
-            importance: Notifications.AndroidImportance.LOW, // LOW
-            vibrationPattern: null, // NO VIBRATION
+        // Use a NEW channel ID to force update settings on the device
+        await Notifications.setNotificationChannelAsync('alarm-max-v2', {
+            name: 'Max Priority Alarm',
+            importance: Notifications.AndroidImportance.MAX,
+            vibrationPattern: [0, 500, 500, 500],
             lightColor: '#FF231F7C',
+            lockscreenVisibility: Notifications.AndroidNotificationVisibility.PUBLIC,
+            bypassDnd: true,
+            sound: 'default',
         });
     }
 
