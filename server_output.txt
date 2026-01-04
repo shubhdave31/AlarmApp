@@ -674,3 +674,45 @@ Android Bundled 41ms node_modules\expo-router\entry.js (1 module)
  WARN  Linking requires a build-time setting `scheme` in the project's Expo config (app.config.js or app.json) for bare or production apps. Manually providing a `scheme` property can circumvent this warning. Using native app identifier as the scheme 'com.shubh_dave.AlarmApp'. Learn more: https://docs.expo.dev/guides/linking/
  LOG  [AlarmContext] Scheduling for: 4/1/2026, 9:18:00 pm
  LOG  [AlarmService] Scheduling via Timestamp: 4/1/2026, 9:18:00 pm (in 2s)
+Tunnel connection has been closed. This is often related to intermittent connection issues between the dev server and ngrok. Restart the dev server to try connecting to ngrok again.
+Check the Ngrok status page for outages: https://status.ngrok.com/
+Tunnel connected.
+Android node_modules\expo-router\entry.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Android Bundled 892ms node_modules\expo-router\entry.js (1 module)
+ WARN  [expo-av]: Expo AV has been deprecated and will be removed in SDK 54. Use the `expo-audio` and `expo-video` packages to replace the required functionality.
+ WARN  ExpoFaceDetector has been deprecated and will be removed in a future SDK version. We recommend using react-native-vision-camera for this functionality. See https://github.com/mrousavy/react-native-vision-camera
+ WARN  Linking requires a build-time setting `scheme` in the project's Expo config (app.config.js or app.json) for production apps, if it's left blank, your app may crash. The scheme does not apply to development in the Expo client but you should add it as soon as you start working with Linking to avoid creating a broken build. Learn more: https://docs.expo.dev/guides/linking/
+ WARN  Linking requires a build-time setting `scheme` in the project's Expo config (app.config.js or app.json) for bare or production apps. Manually providing a `scheme` property can circumvent this warning. Using native app identifier as the scheme 'com.shubh_dave.AlarmApp'. Learn more: https://docs.expo.dev/guides/linking/
+ LOG  [AlarmContext] Scheduling for: 4/1/2026, 10:17:00 pm
+ LOG  [AlarmService] Scheduling via Timestamp: 4/1/2026, 10:17:00 pm (in 4s)
+ LOG  [AlarmContext] Alarm Set: 10:17:00 pm
+Android node_modules\expo-router\entry.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Android Bundled 98ms node_modules\expo-router\entry.js (1 module)
+ WARN  [expo-av]: Expo AV has been deprecated and will be removed in SDK 54. Use the `expo-audio` and `expo-video` packages to replace the required functionality.
+ WARN  ExpoFaceDetector has been deprecated and will be removed in a future SDK version. We recommend using react-native-vision-camera for this functionality. See https://github.com/mrousavy/react-native-vision-camera
+ WARN  Linking requires a build-time setting `scheme` in the project's Expo config (app.config.js or app.json) for production apps, if it's left blank, your app may crash. The scheme does not apply to development in the Expo client but you should add it as soon as you start working with Linking to avoid creating a broken build. Learn more: https://docs.expo.dev/guides/linking/
+ WARN  Linking requires a build-time setting `scheme` in the project's Expo config (app.config.js or app.json) for bare or production apps. Manually providing a `scheme` property can circumvent this warning. Using native app identifier as the scheme 'com.shubh_dave.AlarmApp'. Learn more: https://docs.expo.dev/guides/linking/
+Android node_modules\expo-router\entry.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Android Bundled 57ms node_modules\expo-router\entry.js (1 module)
+ WARN  [expo-av]: Expo AV has been deprecated and will be removed in SDK 54. Use the `expo-audio` and `expo-video` packages to replace the required functionality.
+ WARN  ExpoFaceDetector has been deprecated and will be removed in a future SDK version. We recommend using react-native-vision-camera for this functionality. See https://github.com/mrousavy/react-native-vision-camera
+ WARN  Linking requires a build-time setting `scheme` in the project's Expo config (app.config.js or app.json) for production apps, if it's left blank, your app may crash. The scheme does not apply to development in the Expo client but you should add it as soon as you start working with Linking to avoid creating a broken build. Learn more: https://docs.expo.dev/guides/linking/
+ WARN  Linking requires a build-time setting `scheme` in the project's Expo config (app.config.js or app.json) for bare or production apps. Manually providing a `scheme` property can circumvent this warning. Using native app identifier as the scheme 'com.shubh_dave.AlarmApp'. Learn more: https://docs.expo.dev/guides/linking/
+ LOG  [AlarmContext] Scheduling for: 4/1/2026, 10:28:00 pm
+ LOG  [AlarmService] Scheduling via Timestamp: 4/1/2026, 10:28:00 pm (in 49s)
+ LOG  [AlarmContext] Alarm Set: 10:28:00 pm
+Tunnel connection has been closed. This is often related to intermittent connection issues between the dev server and ngrok. Restart the dev server to try connecting to ngrok again.
+Check the Ngrok status page for outages: https://status.ngrok.com/
+Tunnel connected.
+Tunnel connection has been closed. This is often related to intermittent connection issues between the dev server and ngrok. Restart the dev server to try connecting to ngrok again.
+Check the Ngrok status page for outages: https://status.ngrok.com/
+Tunnel connected.
+Android node_modules\expo-router\entry.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Android Bundled 146ms node_modules\expo-router\entry.js (1 module)
+ WARN  [expo-av]: Expo AV has been deprecated and will be removed in SDK 54. Use the `expo-audio` and `expo-video` packages to replace the required functionality.
+ WARN  ExpoFaceDetector has been deprecated and will be removed in a future SDK version. We recommend using react-native-vision-camera for this functionality. See https://github.com/mrousavy/react-native-vision-camera
+ WARN  Linking requires a build-time setting `scheme` in the project's Expo config (app.config.js or app.json) for production apps, if it's left blank, your app may crash. The scheme does not apply to development in the Expo client but you should add it as soon as you start working with Linking to avoid creating a broken build. Learn more: https://docs.expo.dev/guides/linking/
+ WARN  Linking requires a build-time setting `scheme` in the project's Expo config (app.config.js or app.json) for bare or production apps. Manually providing a `scheme` property can circumvent this warning. Using native app identifier as the scheme 'com.shubh_dave.AlarmApp'. Learn more: https://docs.expo.dev/guides/linking/
+ LOG  [AlarmContext] Scheduling for: 4/1/2026, 11:52:00 pm
+ LOG  [AlarmService] Scheduling via Timestamp: 4/1/2026, 11:52:00 pm (in 10s)
+ LOG  [AlarmContext] Alarm Set: 11:52:00 pm

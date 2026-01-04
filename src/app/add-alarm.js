@@ -91,7 +91,7 @@ export default function AddAlarm() {
                                         mode="time"
                                         is24Hour={true}
                                         onChange={onChange}
-                                        display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                                        display="spinner"
                                         textColor="white"
                                     />
                                 )

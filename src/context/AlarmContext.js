@@ -132,7 +132,7 @@ export const AlarmProvider = ({ children }) => {
             dismissMode
         });
 
-        Alert.alert("DEBUG: Alarm Set", `Scheduled for:\n${targetDate.toLocaleTimeString()}`);
+        console.log(`[AlarmContext] Alarm Set: ${targetDate.toLocaleTimeString()}`);
 
         const newAlarm = {
             id: uuidv4(),

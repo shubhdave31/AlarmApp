@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, Dimensions, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, StyleSheet, Dimensions, TouchableOpacity, Alert, Animated, Easing } from 'react-native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import * as FaceDetector from 'expo-face-detector';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -12,21 +12,58 @@ export default function ActiveAlarmScreen() {
     const [permission, requestPermission] = useCameraPermissions();
     const [scanned, setScanned] = useState(false);
     const [faceDetected, setFaceDetected] = useState(false);
-    const [progress, setProgress] = useState(0);
+    const faceDetectedRef = useRef(false); // Mirror state for Loop Closure
+
+    // UI Animations (No State Re-renders)
+    const progressAnim = useRef(new Animated.Value(0)).current;
+    const scanLineAnim = useRef(new Animated.Value(0)).current;
+
     const cameraRef = useRef(null);
-    const progressInterval = useRef(null);
     const detectionLoop = useRef(null);
-    const isDetecting = useRef(false); // Semaphore to prevent overlapping detections
+    const isDetecting = useRef(false);
+    const isMounted = useRef(true);
+
+    const dismissed = useRef(false);
 
     const isQRMode = alarmMetadata?.dismissMode === 'qr';
-    const isMounted = useRef(true);
 
     useEffect(() => {
         isMounted.current = true;
+        startScanLineAnimation();
+
+        // Add Listener for 100% completion
+        const id = progressAnim.addListener(({ value }) => {
+            if (value >= 100 && !dismissed.current) {
+                dismissed.current = true;
+                console.log("Progress 100%. Dismissing...");
+                onAlarmDismissed();
+            }
+        });
+
         return () => {
             isMounted.current = false;
+            progressAnim.removeListener(id);
         };
     }, []);
+
+    const startScanLineAnimation = () => {
+        Animated.loop(
+            Animated.sequence([
+                Animated.timing(scanLineAnim, {
+                    toValue: 1,
+                    duration: 2000,
+                    easing: Easing.linear,
+                    useNativeDriver: true,
+                }),
+                Animated.timing(scanLineAnim, {
+                    toValue: 0,
+                    duration: 2000,
+                    easing: Easing.linear,
+                    useNativeDriver: true,
+                })
+            ])
+        ).start();
+    };
 
     useEffect(() => {
         if (!permission) {
@@ -41,16 +78,17 @@ export default function ActiveAlarmScreen() {
         }
         return () => {
             stopDetectionLoop();
-            stopProgress();
+            // Do not reset progress here immediately to avoid flickering logic
         };
     }, [permission, isQRMode]);
 
     const onAlarmDismissed = React.useCallback(() => {
+        stopAlarm();
+        // Delay Alert slightly to allow UI to close
         setTimeout(() => {
-            stopAlarm();
             Alert.alert("Alarm Dismissed", "Good morning!");
-        }, 0);
-    }, []);
+        }, 300);
+    }, [stopAlarm]);
 
     const handleBarcodeScanned = React.useCallback(({ type, data }) => {
         if (scanned || !isQRMode) return;
@@ -65,7 +103,7 @@ export default function ActiveAlarmScreen() {
 
         detectionLoop.current = setInterval(async () => {
             // Prevent overlap and ensure mounted
-            if (isDetecting.current || !cameraRef.current || !isMounted.current) return;
+            if (isDetecting.current || !cameraRef.current || !isMounted.current || dismissed.current) return;
 
             try {
                 isDetecting.current = true;
@@ -84,13 +122,19 @@ export default function ActiveAlarmScreen() {
                         tracking: false
                     });
 
-                    if (isMounted.current) {
+                    if (isMounted.current && !dismissed.current) {
                         if (result.faces.length > 0) {
-                            setFaceDetected(true);
-                            startProgress(); // Will check internal flag to not duplicate
+                            if (!faceDetectedRef.current) {
+                                setFaceDetected(true);
+                                faceDetectedRef.current = true;
+                                startProgress();
+                            }
                         } else {
-                            setFaceDetected(false);
-                            stopProgress();
+                            if (faceDetectedRef.current) {
+                                setFaceDetected(false);
+                                faceDetectedRef.current = false;
+                                stopProgress();
+                            }
                         }
                     }
                 }
@@ -110,30 +154,26 @@ export default function ActiveAlarmScreen() {
     };
 
     const startProgress = () => {
-        if (progressInterval.current) return;
+        if (dismissed.current) return;
 
-        progressInterval.current = setInterval(() => {
-            setProgress((prev) => {
-                const next = prev + 2; // SLOWER FILL (~5 seconds total: 50 ticks * 100ms)
-                if (next >= 100) {
-                    clearInterval(progressInterval.current);
-                    progressInterval.current = null;
-                    onAlarmDismissed();
-                    return 100;
-                }
-                return next;
-            });
-        }, 100);
+        // Build up to 100% over 2 seconds (Faster feel)
+        Animated.timing(progressAnim, {
+            toValue: 100,
+            duration: 2500, // 2.5 seconds to open
+            easing: Easing.linear,
+            useNativeDriver: false, // width property
+        }).start();
     };
 
     const stopProgress = () => {
-        if (progressInterval.current) {
-            clearInterval(progressInterval.current);
-            progressInterval.current = null;
-        }
-        if (isMounted.current) {
-            setProgress(0);
-        }
+        if (dismissed.current) return;
+
+        progressAnim.stopAnimation();
+        Animated.timing(progressAnim, {
+            toValue: 0,
+            duration: 200,
+            useNativeDriver: false,
+        }).start();
     };
 
     if (!permission) {
@@ -152,6 +192,11 @@ export default function ActiveAlarmScreen() {
             </View>
         );
     }
+
+    const scanLineTranslateY = scanLineAnim.interpolate({
+        inputRange: [0, 1],
+        outputRange: [0, 240], // Height of faceBox - roughly
+    });
 
     return (
         <View style={styles.container}>
@@ -176,7 +221,10 @@ export default function ActiveAlarmScreen() {
                         // FACE MODE UI
                         <>
                             <View style={[styles.faceBox, faceDetected && styles.faceBoxActive]}>
-                                {/* Scan Line Removed */}
+                                <Animated.View style={[
+                                    styles.scanLine,
+                                    { transform: [{ translateY: scanLineTranslateY }] }
+                                ]} />
                             </View>
                             <Text style={styles.instructionText}>
                                 {faceDetected ? "Hold still..." : "Scan Face to Stop"}
@@ -194,14 +242,21 @@ export default function ActiveAlarmScreen() {
                 </View>
 
                 <View style={styles.footer}>
-                    {/* Only show progress bar for Face Mode */}
-                    {!isQRMode && faceDetected && (
+                    {!isQRMode && (
                         <View style={styles.progressBarContainer}>
-                            <View style={[styles.progressBar, { width: `${progress}%` }]} />
+                            <Animated.View style={[
+                                styles.progressBar,
+                                {
+                                    width: progressAnim.interpolate({
+                                        inputRange: [0, 100],
+                                        outputRange: ['0%', '100%']
+                                    })
+                                }
+                            ]} />
                         </View>
                     )}
                     <TouchableOpacity onPress={stopAlarm} style={styles.testButton}>
-                        <Text style={styles.testButtonText}>Emergency Stop (v2.1 Fix)</Text>
+                        <Text style={styles.testButtonText}>Emergency Stop (Animations)</Text>
                     </TouchableOpacity>
                 </View>
             </LinearGradient>
@@ -273,7 +328,7 @@ const styles = StyleSheet.create({
         borderWidth: 2,
         borderColor: 'rgba(255,255,255,0.3)',
         borderRadius: 20,
-        justifyContent: 'center',
+        justifyContent: 'flex-start', // Important for scan line
         alignItems: 'center',
         marginBottom: 20,
         overflow: 'hidden',
@@ -281,6 +336,16 @@ const styles = StyleSheet.create({
     faceBoxActive: {
         borderColor: '#34C759',
         borderWidth: 4,
+    },
+    scanLine: {
+        width: '100%',
+        height: 2,
+        backgroundColor: '#34C759',
+        opacity: 0.8,
+        shadowColor: '#34C759',
+        shadowOffset: { width: 0, height: 0 },
+        shadowOpacity: 1,
+        shadowRadius: 10,
     },
     instructionText: {
         color: '#FFF',
