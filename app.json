@@ -20,6 +20,12 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
+      "permissions": [
+        "android.permission.SCHEDULE_EXACT_ALARM",
+        "android.permission.USE_FULL_SCREEN_INTENT",
+        "android.permission.VIBRATE",
+        "android.permission.FOREGROUND_SERVICE"
+      ],
       "edgeToEdgeEnabled": true,
       "package": "com.shubh_dave.AlarmApp"
     },
